@@ -5,6 +5,7 @@ import pandas as pd
 import torch.nn as nn
 import torch.nn.functional as F
 
+# 3 预测层 
 class Prediction(nn.Module):
     def __init__(self, in_feature = 69, hid_units = 256, contract = 1, mid_layers = True, res_con = True):
         super(Prediction, self).__init__()
@@ -32,7 +33,8 @@ class Prediction(nn.Module):
 
         return out
 
-        
+# 2 特征编码层
+# encode the features for the query, 各种操作Encode
 class FeatureEmbed(nn.Module):
     def __init__(self, embed_size=32, tables = 10, types=20, joins = 40, columns= 30, \
                  ops=4, use_sample = True, use_hist = True, bin_number = 50):
@@ -150,8 +152,7 @@ class FeatureEmbed(nn.Module):
 #         size = self.embed_size * 5 + self.embed_size // 8 + 1
 #         return size
 
-
-
+# 主模型
 class QueryFormer(nn.Module):
     def __init__(self, emb_size = 32 ,ffn_dim = 32, head_size = 8, \
                  dropout = 0.1, attention_dropout_rate = 0.1, n_layers = 8, \
@@ -228,9 +229,7 @@ class QueryFormer(nn.Module):
         return self.pred(output[:,0,:]), self.pred2(output[:,0,:])
 
 
-
-
-
+# 1.2 前馈网络
 class FeedForwardNetwork(nn.Module):
     def __init__(self, hidden_size, ffn_size, dropout_rate):
         super(FeedForwardNetwork, self).__init__()
@@ -246,6 +245,7 @@ class FeedForwardNetwork(nn.Module):
         return x
 
 
+# 1.1多头注意力
 class MultiHeadAttention(nn.Module):
     def __init__(self, hidden_size, attention_dropout_rate, head_size):
         super(MultiHeadAttention, self).__init__()
@@ -298,6 +298,7 @@ class MultiHeadAttention(nn.Module):
         return x
 
 
+# 1 编码层
 class EncoderLayer(nn.Module):
     def __init__(self, hidden_size, ffn_size, dropout_rate, attention_dropout_rate, head_size):
         super(EncoderLayer, self).__init__()

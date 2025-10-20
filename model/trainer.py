@@ -13,7 +13,7 @@ def chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
-def print_qerror(preds_unnorm, labels_unnorm, prints=False):
+def print_qerror(preds_unnorm, labels_unnorm, prints=True):
     qerror = []
     for i in range(len(preds_unnorm)):
         if preds_unnorm[i] > float(labels_unnorm[i]):
@@ -58,10 +58,31 @@ def eval_workload(workload, methods):
         methods['cost_norm'], 'cost', table_sample)
 
     eval_score = evaluate(methods['model'], ds, methods['bs'], methods['cost_norm'], methods['device'],True)
+    # 添加Q-error评估
+    # Add Q-error evaluation
+    model = methods['model']
+    model.eval()
+    cost_predss = np.empty(0)
+    
+    with torch.no_grad():
+        for i in range(0, len(ds), methods['bs']):
+            batch, batch_labels = collator(list(zip(*[ds[j] for j in range(i,min(i+methods['bs'], len(ds)) ) ])))
+            batch = batch.to(methods['device'])
+            cost_preds, _ = model(batch)
+            cost_preds = cost_preds.squeeze()
+            cost_predss = np.append(cost_predss, cost_preds.cpu().detach().numpy())
+    
+    # Print Q-error metrics
+    qerror_scores = print_qerror(methods['cost_norm'].unnormalize_labels(cost_predss), ds.costs, prints=True)
+    print(f"Q-error metrics for {workload}:")
+    print(f"  Q-median: {qerror_scores['q_median']:.4f}")
+    print(f"  Q-90th: {qerror_scores['q_90']:.4f}")
+    print(f"  Q-mean: {qerror_scores['q_mean']:.4f}")
+    
     return eval_score, ds
 
 
-def evaluate(model, ds, bs, norm, device, prints=False):
+def evaluate(model, ds, bs, norm, device, prints=True):
     model.eval()
     cost_predss = np.empty(0)
 
@@ -142,6 +163,22 @@ def train(model, train_ds, val_ds, crit, \
 
         if epoch > 40:
             test_scores, corrs = evaluate(model, val_ds, bs, cost_norm, device, False)
+            
+            # 添加Q-error评估
+            # Add Q-error evaluation for validation set
+            model.eval()
+            val_cost_predss = np.empty(0)
+            
+            with torch.no_grad():
+                for i in range(0, len(val_ds), bs):
+                    batch, batch_labels = collator(list(zip(*[val_ds[j] for j in range(i,min(i+bs, len(val_ds)) ) ])))
+                    batch = batch.to(device)
+                    cost_preds, _ = model(batch)
+                    cost_preds = cost_preds.squeeze()
+                    val_cost_predss = np.append(val_cost_predss, cost_preds.cpu().detach().numpy())
+            
+            val_qerror_scores = print_qerror(cost_norm.unnormalize_labels(val_cost_predss), val_ds.costs, prints=True)
+            print(f"Validation Q-error - Median: {val_qerror_scores['q_median']:.4f}, Mean: {val_qerror_scores['q_mean']:.4f}")
 
             if test_scores['q_mean'] < best_prev: ## mean mse
                 best_model_path = logging(args, epoch, test_scores, filename = 'log.txt', save_model = True, model = model)
@@ -150,6 +187,7 @@ def train(model, train_ds, val_ds, crit, \
         if epoch % 20 == 0:
             print('Epoch: {}  Avg Loss: {}, Time: {}'.format(epoch,losses/len(train_ds), time.time()-t0))
             train_scores = print_qerror(cost_norm.unnormalize_labels(cost_predss),cost_labelss, True)
+            print(f"Training Q-error - Median: {train_scores['q_median']:.4f}, 90th: {train_scores['q_90']:.4f}, Mean: {train_scores['q_mean']:.4f}")
 
         scheduler.step()   
 

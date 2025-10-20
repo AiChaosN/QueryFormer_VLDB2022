@@ -291,6 +291,7 @@ def formatFilter(plan):
     
     return filters, alias
 
+# 编码类,用于将树节点转换为编码
 class Encoding:
     def __init__(self, column_min_max_vals, 
                  col2idx, op2idx={'>':0, '=':1, '<':2, 'NA':3}):
@@ -362,6 +363,7 @@ class Encoding:
         return self.type2idx[nodeType]
 
 
+# 树节点类,用于将之前的json格式转换为树节点
 class TreeNode:
     def __init__(self, nodeType, typeId, filt, card, join, join_str, filterDict):
         self.nodeType = nodeType
