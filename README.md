@@ -1,5 +1,14 @@
 # QueryFormer Forked Repo - README
 
+# Comparison: QueryFormer vs. GNTO
+
+## Environment Setup and Steps for Running `Training V1.ipynb`
+```shell
+# get QueryFormer results
+python3 trainer_vsGNTO.py
+python3 TrainingV1.py
+```
+
 Query representation learning plays a crucial role in various AI-based database tasks, such as query optimization and workload forecasting. QueryFormer is a method that uses attention to learn query representation. 
 
 _Zhao, Yue, Gao Cong, Jiachen Shi, and Chunyan Miao. "Queryformer: A Tree Transformer Model for Query Plan Representation." Proceedings of the VLDB Endowment 15, no. 8 (2022): 1658-1670._
