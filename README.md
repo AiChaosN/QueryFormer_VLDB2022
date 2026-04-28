@@ -1,5 +1,9 @@
 # Comparison: QueryFormer vs. GNTO
 
+> **Note**: GNTO comparison scripts now use the centralized adapter from the [GNTO repository](https://github.com/AiChaosN/GNTO).
+> GNTO's `adapters/qf_adapter.py` imports this repo's data utilities (`model.database_util`, `model.dataset`, etc.).
+> Make sure the GNTO repo is cloned as a sibling directory (`../GNTO`).
+
 ## Environment Setup and Steps for Running `Training V1.ipynb`
 ```shell
 # get QueryFormer results
